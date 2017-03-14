@@ -1,0 +1,76 @@
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Example using equations and figures}
+-->
+
+An Example vignette with demonstrations
+=======================================
+
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(out.extra='style="display:block; margin: auto"'
+    #, fig.align="center"
+    , fig.width=4.3, fig.height=3.2, dev.args=list(pointsize=10)
+    )
+knit_hooks$set(spar = function(before, options, envir) {
+    if (before){
+        par( las=1 )                   #also y axis labels horizontal
+        par(mar=c(2.0,3.3,0,0)+0.3 )  #margins
+        par(tck=0.02 )                          #axe-tick length inside plots             
+        par(mgp=c(1.1,0.2,0) )  #positioning of axis title, axis labels, axis
+     }
+})
+```
+
+
+Introduction
+------------
+
+Vignettes source code resides in `vignettes`.
+
+Use `knitr::knit2html(fName)` to convert it to html.
+or function `genVigs()` in package twDev
+
+For [automated creation](http://yihui.name/knitr/demo/vignette/) on R CMD build, specify in DESCRIPTION  
+* Suggests:  knitr
+* VignetteBuilder: knitr
+
+Text decoration
+* *italics*, _italics_
+* **bold**, __bold__
+* `monopace`
+
+Links
+* A [link example](http://url.com/ "Title")
+
+R chunk options
+* echo (TRUE)
+* results (markup, asis, hide)
+    * with hide errors and warnings will still be visible
+* include (TRUE): set to FALSE to have nothing in the doc     
+* eval (TRUE) 
+* fig.width, fig.height (7) in inches 
+ 
+
+Math
+----
+
+$$latex
+a_i =
+\begin{cases}
+\tan (e_{i2}/e_{i1}), & \text{if $e_{i1}>0$;}
+\newline
+\tan (e_{i2}/e_{i1}) + \pi, & \text{otherwise.}
+\end{cases}
+$$ 
+
+
+Graphics
+--------
+
+```{r ci, spar=TRUE}
+## simple plot
+plot(1:10,2:11)
+```
+

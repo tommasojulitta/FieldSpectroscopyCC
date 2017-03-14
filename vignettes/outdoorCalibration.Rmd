@@ -1,0 +1,96 @@
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Example using equations and figures}
+-->
+
+An Example vignette with demonstrations
+=======================================
+
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(out.extra='style="display:block; margin: auto"'
+    #, fig.align="center"
+    , fig.width=4.3, fig.height=3.2, dev.args=list(pointsize=10)
+    )
+knit_hooks$set(spar = function(before, options, envir) {
+    if (before){
+        par( las=1 )                   #also y axis labels horizontal
+        par(mar=c(2.0,3.3,0,0)+0.3 )  #margins
+        par(tck=0.02 )                          #axe-tick length inside plots             
+        par(mgp=c(1.1,0.2,0) )  #positioning of axis title, axis labels, axis
+     }
+})
+```
+
+
+Introduction
+------------
+
+TODO Some general explantion of the task and setup that hte package addresses.
+
+Example data
+------------
+
+```{r}
+packageDir <- system.file(package='FieldSpectroscopyCC')	# only works if package has been installed
+dataDir <- file.path(packageDir,"data")
+load(file.path(dataDir,"outdoor_rad_cal_data.Rdata"))
+load(file.path(dataDir,"atmospheric_absorption_regions.Rdata"))
+integration_time<-450
+str( outdoor_rad_cal_data, max.level = 1 )
+```
+
+TODO explain the example data.
+
+TODO shorten name of dataset, to shorten code samples. 
+
+TODO use more descriptive names inside the dataset.
+
+Processing
+----------
+First, the raw measurement need to be devided by integration time, 
+and several spectra are summarized to a mean spectrum.
+```{r}
+DN_mat<-DN_spectral_matrix_for_rad_cal(outdoor_rad_cal_data$DN_matrix,integration_time=integration_time)
+radiance_mean<-StatsOnSpectra(wl=outdoor_rad_cal_data$radiance_wl,spectra=outdoor_rad_cal_data$radiance_matrix,fun='mean')
+str(radiance_mean)
+```
+
+For the calibration, the spectrum needs to be available at given reference wavelength, 
+which are linearly interpolated from the mean spectrum.
+
+TODO: What is $wp_coef?
+
+```{r}
+radiance_mean_res<-linear_resample(outdoor_rad_cal_data$radiance_wl,radiance_mean,outdoor_rad_cal_data$DN_wl)
+wp_coeff_res<-linear_resample(outdoor_rad_cal_data$wp_coef$V1,outdoor_rad_cal_data$wp_coef$V2,outdoor_rad_cal_data$DN_wl)
+DN_mat<-DN_spectral_matrix_for_rad_cal(outdoor_rad_cal_data$DN_matrix,integration_time=integration_time)
+radiance_mean<-StatsOnSpectra(wl=outdoor_rad_cal_data$radiance_wl,spectra=outdoor_rad_cal_data$radiance_matrix,fun='mean')
+str(radiance_mean)
+```
+
+TODO explain the other things
+Thomas did not understand it fully yet, what is radiance compared to DN?
+ 
+```{r}
+#calculate mean of several spectra
+DN_mean<-StatsOnSpectra(wl=outdoor_rad_cal_data$DN_wl,spectra=outdoor_rad_cal_data$DN_matrix,fun='mean')
+#calculate calibration coefficients
+rad_cal<-radiometric_calibration(type=1,wl=outdoor_rad_cal_data$DN_wl,radiance_mean_res,DN_mean)
+#exclude regions of the spectrum affected by atmospheric absorptions and noisy pixels
+range_to_exclude<-data.frame(wl_start=c(outdoor_rad_cal_data$DN_wl[1],outdoor_rad_cal_data$DN_wl[length(outdoor_rad_cal_data$DN_wl)-35]),wl_end=c(outdoor_rad_cal_data$DN_wl[30],outdoor_rad_cal_data$DN_wl[length(outdoor_rad_cal_data$DN_wl)]))
+atmospheric_absorption_regions<-rbind(atmospheric_absorption_regions,c(range_to_exclude))
+exclude_atmospheric_absorption_features<-exclude_spectral_regions(wl=outdoor_rad_cal_data$DN_wl,rad_cal,atmospheric_absorption_regions)
+#smooth results
+rad_cal_coeff<-spline_smooth_gapfilling(wl=outdoor_rad_cal_data$DN_wl,exclude_atmospheric_absorption_features) 
+```
+
+```{r ci, spar=TRUE}
+plot(outdoor_rad_cal_data$DN_wl,rad_cal,ylim=c(0,0.000025))
+points(outdoor_rad_cal_data$DN_wl,exclude_atmospheric_absorption_features,pch=20,col="red")
+lines(outdoor_rad_cal_data$DN_wl,rad_cal_coeff,col="green",lwd=2)
+lines(outdoor_rad_cal_data$DN_wl,rad_cal_edge_coef,col="dark green",lwd=2)
+```
+
+

@@ -1,0 +1,11 @@
+Package: FieldSpectroscopyCC
+Title: R package for Characterization and Calibration of spectrometers
+Version: 0.5.227
+Date: 2016-03-09
+Author: Tommaso Julitta, Mirco Migliavacca, Thomas Wutzler 
+Maintainer: Tommaso Julitta <tommaso.julitta@gmail.com>
+Description: R package for Characterization and Calibration of spectrometers
+Depends: R (>= 3.0.3)
+Suggests: testthat
+License: GPL-2
+LazyLoad: yes
